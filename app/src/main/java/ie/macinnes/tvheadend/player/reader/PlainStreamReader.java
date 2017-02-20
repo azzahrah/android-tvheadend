@@ -17,6 +17,7 @@
 package ie.macinnes.tvheadend.player.reader;
 
 import android.support.annotation.NonNull;
+import android.util.Log;
 
 import com.google.android.exoplayer2.C;
 import com.google.android.exoplayer2.Format;
@@ -30,6 +31,8 @@ import ie.macinnes.htsp.HtspMessage;
  * A PlainStreamReader simply copies the raw bytes from muxpkt's over onto the track output
  */
 abstract class PlainStreamReader implements StreamReader {
+    private static final String TAG = PlainStreamReader.class.getName();
+
     protected TrackOutput mTrackOutput;
 
     @Override
@@ -42,14 +45,28 @@ abstract class PlainStreamReader implements StreamReader {
     @Override
     public final void consume(@NonNull final HtspMessage message) {
         final long pts = message.getInteger("pts");
+        final int frameType = message.getInteger("frametype");
         final byte[] payload = message.getByteArray("payload");
 
         final ParsableByteArray pba = new ParsableByteArray(payload);
 
-        // TODO: Set Buffer Flag key frame based on frametype
-        // frametype   u32   required   Type of frame as ASCII value: 'I', 'P', 'B'
+        int bufferFlags = 0;
+
+        Log.d(TAG, "PSR: frameType " + frameType);
+
+        // Frame Type 66 = B
+        // Frame Type 73 = I
+        // Frame Type 80 = P
+        if (frameType == 73) {
+            // We have an I frame, tell exoplayer this as a keyframe
+            Log.d(TAG, "PSR: Setting  BUFFER_FLAG_KEY_FRAME");
+            bufferFlags |= C.BUFFER_FLAG_KEY_FRAME;
+        }
+
+        Log.d(TAG, "PSR: bufferFlags " + bufferFlags);
+
         mTrackOutput.sampleData(pba, payload.length);
-        mTrackOutput.sampleMetadata(pts, C.BUFFER_FLAG_KEY_FRAME, payload.length, 0, null);
+        mTrackOutput.sampleMetadata(pts, bufferFlags, payload.length, 0, null);
     }
 
     @NonNull
