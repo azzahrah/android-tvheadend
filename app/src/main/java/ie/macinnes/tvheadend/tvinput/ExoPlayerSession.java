@@ -19,6 +19,7 @@ package ie.macinnes.tvheadend.tvinput;
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.graphics.Point;
+import android.media.PlaybackParams;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
@@ -78,7 +79,7 @@ public class ExoPlayerSession extends BaseSession implements ExoPlayer.EventList
     private SimpleExoPlayer mExoPlayer;
     private EventLogger mEventLogger;
     private TvheadendTrackSelector mTrackSelector;
-    private DataSource.Factory mDataSourceFactory;
+    private HtspDataSource.Factory mDataSourceFactory;
     private MediaSource mMediaSource;
 
     private ExtractorsFactory mExtractorsFactory;
@@ -168,6 +169,38 @@ public class ExoPlayerSession extends BaseSession implements ExoPlayer.EventList
     public boolean onSelectTrack(int type, String trackId) {
         Log.d(TAG, "Session onSelectTrack: " + type + " / " + trackId + " (" + mSessionNumber + ")");
         return mTrackSelector.onSelectTrack(type, trackId);
+    }
+
+    @Override
+    public void onTimeShiftPause() {
+        mExoPlayer.setPlayWhenReady(false);
+        mDataSourceFactory.getMostRecentDataSource().getSubscriber().pause();
+    }
+
+    @Override
+    public void onTimeShiftResume() {
+        mDataSourceFactory.getMostRecentDataSource().getSubscriber().resume();
+        mExoPlayer.setPlayWhenReady(true);
+    }
+
+    @Override
+    public void onTimeShiftSeekTo(long timeMs) {
+        super.onTimeShiftSeekTo(timeMs);
+    }
+
+    @Override
+    public void onTimeShiftSetPlaybackParams(PlaybackParams params) {
+        super.onTimeShiftSetPlaybackParams(params);
+    }
+
+    @Override
+    public long onTimeShiftGetStartPosition() {
+        return super.onTimeShiftGetStartPosition();
+    }
+
+    @Override
+    public long onTimeShiftGetCurrentPosition() {
+        return super.onTimeShiftGetCurrentPosition();
     }
 
     // ExoPlayer.EventListener Methods

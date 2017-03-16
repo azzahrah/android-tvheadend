@@ -4,6 +4,7 @@ import android.content.Context;
 import android.media.tv.TvInputManager;
 import android.media.tv.TvTrackInfo;
 import android.net.Uri;
+import android.os.Build;
 import android.os.Handler;
 import android.os.Message;
 import android.util.Log;
@@ -54,6 +55,10 @@ abstract public class BaseSession extends android.media.tv.TvInputService.Sessio
 
         // Notify we are busy tuning
         notifyVideoUnavailable(TvInputManager.VIDEO_UNAVAILABLE_REASON_TUNING);
+
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            notifyTimeShiftStatusChanged(TvInputManager.TIME_SHIFT_STATUS_AVAILABLE);
+        }
 
         mServiceHandler.removeCallbacks(mPlayChannelRunnable);
         mPlayChannelRunnable = new PlayChannelRunnable(channelUri);
